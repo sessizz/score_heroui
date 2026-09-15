@@ -58,16 +58,21 @@ function parseJsonBody(req) {
 function serveStaticFile(res, filePath) {
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      const indexPath = path.join(PUBLIC_DIR, 'index.html');
-      fs.readFile(indexPath, (err2, data) => {
-        if (err2) {
-          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-          return res.end('404 Not Found');
-        }
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(data);
-      });
-      return;
+      const ext = path.extname(filePath).toLowerCase();
+      if (!ext || ext === '.html') {
+        const indexPath = path.join(PUBLIC_DIR, 'index.html');
+        fs.readFile(indexPath, (err2, data) => {
+          if (err2) {
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            return res.end('404 Not Found');
+          }
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(data);
+        });
+        return;
+      }
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      return res.end('404 Not Found');
     }
 
     const ext = path.extname(filePath).toLowerCase();
@@ -478,8 +483,10 @@ const server = http.createServer(async (req, res) => {
   // OBS Plugin & Scripts Download
   if (pathname.startsWith('/obs/')) {
     const filename = path.basename(pathname);
-    const obsFilePath = path.join(__dirname, '..', 'obs', filename);
-    return serveStaticFile(res, obsFilePath);
+    const pubPath = path.join(PUBLIC_DIR, 'obs', filename);
+    const rootPath = path.join(__dirname, '..', 'obs', filename);
+    const targetFile = fs.existsSync(pubPath) ? pubPath : rootPath;
+    return serveStaticFile(res, targetFile);
   }
 
   // Static Assets (CSS, JS, Images)
