@@ -30,7 +30,17 @@ local hotkey_ids = {}
 local is_windows = package.config:sub(1,1) == '\\'
 local vbs_helper_path = nil
 
--- Windows'ta siyah konsol penceresinin acilmasini onleyen VBS olusturucu
+-- Windows Win32 API yukleyicisi (Siyah CMD konsol penceresini %100 onler)
+local ffi_ok, ffi = pcall(require, "ffi")
+if ffi_ok and ffi and is_windows then
+    pcall(function()
+        ffi.cdef[[
+            unsigned int WinExec(const char *lpCmdLine, unsigned int uCmdShow);
+        ]]
+    end)
+end
+
+-- Windows'ta siyah konsol penceresinin acilmasini onleyen VBS olusturucu (FFI yoksa yedek)
 local function ensure_vbs_helper()
     if not is_windows then return nil end
     if vbs_helper_path then return vbs_helper_path end
@@ -69,6 +79,14 @@ function send_action(action)
     last_status_text = "Son Eylem: " .. action .. " (" .. os.date("%H:%M:%S") .. ")"
 
     if is_windows then
+        -- 1. Win32 WinExec API: Sifir CMD penceresi, tamamen gorunmez calisir
+        if ffi_ok and ffi and ffi.C and ffi.C.WinExec then
+            local curl_cmd = 'curl.exe -s -m 2 -X POST "' .. url .. '"'
+            ffi.C.WinExec(curl_cmd, 0)
+            return
+        end
+
+        -- 2. Yedek: VBS uzerinden SW_HIDE
         local vbs = ensure_vbs_helper()
         if vbs then
             local curl_cmd = 'curl.exe -s -m 2 -X POST "' .. url .. '"'
