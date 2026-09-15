@@ -366,7 +366,7 @@ function checkSetStatus(board) {
   };
 }
 
-const NO_UNDO_ACTIONS = ['undo', 'clock_start', 'clock_pause', 'clock_reset'];
+const NO_UNDO_ACTIONS = ['undo', 'clock_start', 'clock_pause', 'clock_reset', 'clock_toggle'];
 
 const OPERATOR_ALLOWED_ACTIONS = [
   'point_a',
@@ -374,14 +374,20 @@ const OPERATOR_ALLOWED_ACTIONS = [
   'sub_point_a',
   'sub_point_b',
   'set_serve',
+  'toggle_serve',
+  'serve_a',
+  'serve_b',
   'timeout_a',
   'timeout_b',
+  'toggle_timeout_a',
+  'toggle_timeout_b',
   'sub_timeout_a',
   'sub_timeout_b',
   'end_timeout',
   'clock_start',
   'clock_pause',
   'clock_reset',
+  'clock_toggle',
   'swap_sides',
   'end_set',
   'new_set',
@@ -454,6 +460,21 @@ function executeAction(boardId, action, payload = {}, authContext = { isOwner: t
       }
       break;
     }
+    case 'toggle_serve': {
+      board.teamA.isServing = !board.teamA.isServing;
+      board.teamB.isServing = !board.teamA.isServing;
+      break;
+    }
+    case 'serve_a': {
+      board.teamA.isServing = true;
+      board.teamB.isServing = false;
+      break;
+    }
+    case 'serve_b': {
+      board.teamB.isServing = true;
+      board.teamA.isServing = false;
+      break;
+    }
     case 'timeout_a': {
       if (board.teamA.timeouts < 2) {
         board.teamA.timeouts += 1;
@@ -463,6 +484,24 @@ function executeAction(boardId, action, payload = {}, authContext = { isOwner: t
     }
     case 'timeout_b': {
       if (board.teamB.timeouts < 2) {
+        board.teamB.timeouts += 1;
+        startTimeout(board, 'teamB', payload.duration || 30);
+      }
+      break;
+    }
+    case 'toggle_timeout_a': {
+      if (board.timeoutState && board.timeoutState.active && board.timeoutState.team === 'teamA') {
+        clearTimeoutState(board);
+      } else if (board.teamA.timeouts < 2) {
+        board.teamA.timeouts += 1;
+        startTimeout(board, 'teamA', payload.duration || 30);
+      }
+      break;
+    }
+    case 'toggle_timeout_b': {
+      if (board.timeoutState && board.timeoutState.active && board.timeoutState.team === 'teamB') {
+        clearTimeoutState(board);
+      } else if (board.teamB.timeouts < 2) {
         board.teamB.timeouts += 1;
         startTimeout(board, 'teamB', payload.duration || 30);
       }
@@ -494,6 +533,18 @@ function executeAction(boardId, action, payload = {}, authContext = { isOwner: t
         clock.elapsedMs = getClockElapsed(clock);
         clock.running = false;
         clock.startedAt = null;
+      }
+      break;
+    }
+    case 'clock_toggle': {
+      const clock = ensureSetClock(board);
+      if (clock.running) {
+        clock.elapsedMs = getClockElapsed(clock);
+        clock.running = false;
+        clock.startedAt = null;
+      } else {
+        clock.running = true;
+        clock.startedAt = Date.now();
       }
       break;
     }

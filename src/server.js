@@ -21,7 +21,9 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
   '.webp': 'image/webp',
   '.mp3': 'audio/mpeg',
-  '.wav': 'audio/wav'
+  '.wav': 'audio/wav',
+  '.lua': 'text/plain; charset=utf-8',
+  '.py': 'text/plain; charset=utf-8'
 };
 
 function sendJson(res, statusCode, data, extraHeaders = {}) {
@@ -312,12 +314,70 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, { success: true, boardId: board.id, board });
   }
 
-  // Action on board (Unified handler: checks Owner Session vs Operator permissions)
-  const actionMatch = pathname.match(/^\/api\/board\/([a-zA-Z0-9_-]+)\/action$/);
-  if (actionMatch && method === 'POST') {
+  // Quick status summary for OBS scripts or external integrations
+  const quickStatusMatch = pathname.match(/^\/api\/board\/([a-zA-Z0-9_-]+)\/quick-status$/);
+  if (quickStatusMatch && method === 'GET') {
+    const rawTarget = quickStatusMatch[1];
+    const board = store.getBoard(rawTarget) || store.getBoardByOperatorToken(rawTarget);
+    if (!board) {
+      return sendJson(res, 404, { success: false, error: 'Skorboard bulunamadı.' });
+    }
+    return sendJson(res, 200, {
+      success: true,
+      id: board.id,
+      title: board.title,
+      currentSet: board.currentSet,
+      teamA: {
+        name: board.teamA.name,
+        shortName: board.teamA.shortName,
+        points: board.teamA.points,
+        setsWon: board.teamA.setsWon,
+        isServing: board.teamA.isServing,
+        timeouts: board.teamA.timeouts
+      },
+      teamB: {
+        name: board.teamB.name,
+        shortName: board.teamB.shortName,
+        points: board.teamB.points,
+        setsWon: board.teamB.setsWon,
+        isServing: board.teamB.isServing,
+        timeouts: board.teamB.timeouts
+      },
+      timeoutActive: Boolean(board.timeoutState && board.timeoutState.active),
+      timeoutTeam: board.timeoutState ? board.timeoutState.team : null,
+      courtSwapped: Boolean(board.courtSwapped),
+      status: board.status
+    });
+  }
+
+  // Action on board (Unified handler: supports POST with JSON body and GET/POST /api/board/:target/action/:action with query params)
+  const actionMatch = pathname.match(/^\/api\/board\/([a-zA-Z0-9_-]+)\/action(?:\/([a-zA-Z0-9_-]+))?$/);
+  if (actionMatch && (method === 'POST' || method === 'GET')) {
     const rawTarget = actionMatch[1];
-    const body = await parseJsonBody(req);
-    const { action, payload } = body;
+    let action = actionMatch[2];
+    let payload = {};
+
+    if (method === 'POST') {
+      const body = await parseJsonBody(req);
+      if (body.action) action = body.action;
+      if (body.payload && typeof body.payload === 'object') {
+        payload = { ...payload, ...body.payload };
+      } else if (typeof body === 'object') {
+        const { action: _, ...rest } = body;
+        payload = { ...payload, ...rest };
+      }
+    }
+
+    // Also support query parameters (e.g. /action/point_a?amount=1)
+    for (const [key, val] of reqUrl.searchParams.entries()) {
+      if (key === 'action' && !action) action = val;
+      else if (key === 'amount' || key === 'duration') payload[key] = parseInt(val, 10) || 1;
+      else if (key !== 'key') payload[key] = val;
+    }
+
+    if (!action) {
+      return sendJson(res, 400, { success: false, error: 'Eylem (action) belirtilmedi.' });
+    }
 
     const board = store.getBoard(rawTarget) || store.getBoardByOperatorToken(rawTarget);
     if (!board) {
@@ -413,6 +473,13 @@ const server = http.createServer(async (req, res) => {
   // Root / Index (Dashboard)
   if (pathname === '/' || pathname === '/index.html') {
     return serveStaticFile(res, path.join(PUBLIC_DIR, 'index.html'));
+  }
+
+  // OBS Plugin & Scripts Download
+  if (pathname.startsWith('/obs/')) {
+    const filename = path.basename(pathname);
+    const obsFilePath = path.join(__dirname, '..', 'obs', filename);
+    return serveStaticFile(res, obsFilePath);
   }
 
   // Static Assets (CSS, JS, Images)

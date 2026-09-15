@@ -769,15 +769,38 @@
     }
   });
 
-  // OBS Modal Links
-  document.getElementById('btn-open-obs').addEventListener('click', () => {
+  // OBS Modal Links & Hotkeys
+  function populateObsModal() {
     const origin = window.location.origin;
+    const cleanBoardId = (currentBoard && (currentBoard.operatorToken || currentBoard.id)) || boardId;
     document.getElementById('obs-topbar-url').value = `${origin}/overlay/${boardId}?theme=topbar`;
     document.getElementById('obs-lowerthird-url').value = `${origin}/overlay/${boardId}?theme=lowerthird`;
     document.getElementById('obs-bug-url').value = `${origin}/overlay/${boardId}?theme=bug`;
     document.getElementById('obs-live-url').value = `${origin}/live/${boardId}`;
+    const serverUrlInput = document.getElementById('obs-server-url-val');
+    if (serverUrlInput) serverUrlInput.value = origin;
+    const boardIdInput = document.getElementById('obs-board-id-val');
+    if (boardIdInput) boardIdInput.value = cleanBoardId;
+  }
+
+  document.getElementById('btn-open-obs').addEventListener('click', () => {
+    populateObsModal();
     modalObs.classList.add('active');
   });
+
+  const btnOpenHotkeys = document.getElementById('btn-open-hotkeys');
+  if (btnOpenHotkeys) {
+    btnOpenHotkeys.addEventListener('click', () => {
+      populateObsModal();
+      modalObs.classList.add('active');
+      const hotkeysSection = document.getElementById('obs-hotkeys-section');
+      if (hotkeysSection) {
+        setTimeout(() => {
+          hotkeysSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    });
+  }
 
   document.getElementById('btn-close-obs').addEventListener('click', () => {
     modalObs.classList.remove('active');

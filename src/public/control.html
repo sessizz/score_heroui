@@ -31,6 +31,9 @@
       <button class="btn-action-main" id="btn-open-obs" style="padding: 6px 10px; font-size: 0.75rem;">
         📺 OBS Link
       </button>
+      <button class="btn-action-main" id="btn-open-hotkeys" style="padding: 6px 10px; font-size: 0.75rem; background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; font-weight: 700;">
+        ⌨️ OBS Kısayolları
+      </button>
       <button class="btn-action-main" id="btn-open-settings" style="padding: 6px 10px; font-size: 0.75rem;">
         ⚙️ Ayarlar
       </button>
@@ -409,6 +412,55 @@
 
     <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px; border-radius: 6px; font-size: 0.8rem; color: #93c5fd; margin-top: 10px;">
       💡 <b>OBS Kurulum İpucu:</b> OBS Studio'da Kaynaklar > Ekle (+) > <b>Tarayıcı (Browser)</b> seçin. Genişlik: <code>1920</code>, Yükseklik: <code>1080</code> yazıp yukarıdaki linki yapıştırın. Arka plan kendiliğinden şeffaf olacaktır!
+    </div>
+
+    <!-- OBS Hotkeys Script Section -->
+    <div id="obs-hotkeys-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.08)); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 16px; margin-top: 18px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+        <div style="font-weight: 800; font-size: 1.05rem; color: #6ee7b7; display: flex; align-items: center; gap: 8px;">
+          <span>⌨️ OBS Klavye Kısayolları (Hotkeys Eklentisi)</span>
+          <span style="font-size: 0.7rem; background: #059669; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 700;">YENİ</span>
+        </div>
+        <a href="/obs/scoreboard_hotkeys.lua" download="scoreboard_hotkeys.lua" class="btn-action-sm" style="background: #10b981; color: #022c22; font-weight: 800; text-decoration: none; padding: 7px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+          ⬇️ .LUA Eklentisini İndir
+        </a>
+      </div>
+      <p style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 12px; line-height: 1.4;">
+        OBS yayını esnasında tarayıcıya veya telefona geçmeden; NumPad veya F tuşlarıyla doğrudan skoru artırın, servis değiştirin ve mola verin!
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+        <div>
+          <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 4px;">1. OBS'te Girilecek Sunucu URL'si:</label>
+          <div class="obs-link-input-group">
+            <input type="text" class="form-input" id="obs-server-url-val" readonly style="font-size: 0.78rem;">
+            <button class="btn-copy-link" data-target="obs-server-url-val">Kopyala</button>
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 4px;">2. OBS'te Girilecek Skorboard Kodu:</label>
+          <div class="obs-link-input-group">
+            <input type="text" class="form-input" id="obs-board-id-val" readonly style="font-size: 0.78rem; font-weight: 700; color: #6ee7b7;">
+            <button class="btn-copy-link" data-target="obs-board-id-val">Kopyala</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: rgba(0,0,0,0.35); border-radius: 6px; padding: 10px; font-size: 0.75rem; color: #94a3b8; line-height: 1.5;">
+        <b style="color: #e2e8f0;">Nasıl Kullanılır?</b>
+        <ol style="margin-left: 18px; margin-top: 4px;">
+          <li>Yukarıdaki <b>.LUA İndir</b> butonuna basarak dosyayı bilgisayarınıza kaydedin.</li>
+          <li>OBS'te üst menüden <b>Araçlar &rarr; Komut Dosyaları (Scripts)</b> açıp <code>+</code> ile indirdiğiniz <code>scoreboard_hotkeys.lua</code> dosyasını ekleyin.</li>
+          <li>Yukarıdaki <b>Sunucu URL</b> ve <b>Skorboard Kodu</b> değerlerini girin.</li>
+          <li>OBS <b>Ayarlar &rarr; Kısayollar</b> sekmesine gidip dilediğiniz tuşları atayın (Örn: NumPad 1, NumPad 2, NumPad 0)!</li>
+        </ol>
+      </div>
+
+      <div style="margin-top: 10px; display: flex; gap: 12px; font-size: 0.75rem; flex-wrap: wrap;">
+        <a href="/obs/README.md" target="_blank" style="color: #6ee7b7; text-decoration: underline;">📖 Detaylı OBS & Stream Deck Kurulum Kılavuzu</a>
+        <span style="color: #64748b;">|</span>
+        <a href="/obs/scoreboard_hotkeys.py" download="scoreboard_hotkeys.py" style="color: #94a3b8; text-decoration: underline;">🐍 Alternatif Python (.py) Eklentisi</a>
+      </div>
     </div>
   </div>
 </div>
